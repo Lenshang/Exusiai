@@ -1,18 +1,22 @@
 import React from "react";
-import { Layout, Menu, Breadcrumb,Statistic, Row, Col,Progress  } from 'antd';
+import {Statistic, Row, Col,Progress  } from 'antd';
 import "antd/dist/antd.css";
 import "./config"
 class ApiTimer extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {data:{}};
+    this.state = {
+        data:{
+            diskLoad:[]
+        }
+    };
     this.host=global.config.host;
   }
   tick() {
     fetch(this.host+"/GetTemp").then(response=>{
         response.json().then(data=>{
-            data.cpuload=parseFloat(data.cpuload.slice(0,data.cpuload.indexOf(".")+3));
-            data.ramload=parseFloat(data.ramload.slice(0,data.ramload.indexOf(".")+3));
+            data.cpuLoad=Math.floor(data.cpuLoad*100)/100
+            data.ramLoad=Math.floor(data.ramLoad*100)/100
             this.setState({data:data});
         });
     });
@@ -32,21 +36,34 @@ class ApiTimer extends React.Component {
     <div style={{ background: '#fff', padding: 24, minHeight: 280 }}>
         <Row justify="space-around">
         <Col span={12}>
-            <Statistic title="Cpu Temprature" value={this.state.data.cputemp} />
+            <Statistic title="Cpu Temprature" value={this.state.data.cpuTemp} />
         </Col>
         <Col span={12}>
-            <Statistic title="Gpu Temprature" value={this.state.data.gputemp} />
+            <Statistic title="Gpu Temprature" value={this.state.data.gpuTemp} />
         </Col>
         </Row>
         <Row  justify="space-around" style={{ marginTop:20 }}>
         <Col span={12}>
             <div style={{ marginBottom:10 }}>Cpu Used</div>
-            <Progress type="dashboard" percent={this.state.data.cpuload} />
+            <Progress type="dashboard" percent={this.state.data.cpuLoad} />
         </Col>
         <Col span={12}>
             <div style={{ marginBottom:10 }}>Memory Used</div>
-            <Progress type="dashboard" percent={this.state.data.ramload} />
+            <Progress type="dashboard" percent={this.state.data.ramLoad} />
         </Col>
+        </Row>
+        <Row style={{ marginTop:20 }}>
+            <Col span={24}><div style={{ marginBottom:10 }}>Disk Loads</div></Col>
+            {
+                this.state.data.diskLoad.map((item, index)=>{
+                    return (
+                        <Col span={24} key={index}>
+                            <div>{item.name}</div>
+                            <Progress percent={Math.floor(item.load*100)/100} status="active" />
+                        </Col>
+                    )
+                })
+            }
         </Row>
     </div>
     );
